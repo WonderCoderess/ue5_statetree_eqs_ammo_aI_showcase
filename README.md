@@ -115,41 +115,50 @@ bool AShooterNPC::HasAnyAmmo() const
 
 ### StateTree
 
-`FindAmmo` sits above the combat states and is entered by the `Is Out Of Ammo` condition:
-
 ![StateTree overview – FindAmmo state](screenshots/01-statetree-overview-findammo.png)
+*`ST_Shooter` – the `FindAmmo` state sits above the combat states and is entered by the custom `Is Out Of Ammo` condition.*
 
-| QueryPickup | MoveToPickup | WaitForAmmo |
-|---|---|---|
-| ![QueryPickup](screenshots/02-statetree-overview-querypickup.png) | ![MoveToPickup](screenshots/02-statetree-overview-movetopickup.png) | ![WaitForAmmo](screenshots/02-statetree-overview-waitforpickup.png) |
+![QueryPickup state](screenshots/02-statetree-overview-querypickup.png)
+*`QueryPickup` – runs `EQS_FindAmmoPickup` and stores the result in the `AmmoPickup` parameter.*
+
+![MoveToPickup state](screenshots/02-statetree-overview-movetopickup.png)
+*`MoveToPickup` – moves the enemy to the chosen pickup; on success the tree re-selects from Root.*
+
+![WaitForAmmo state](screenshots/02-statetree-overview-waitforpickup.png)
+*`WaitForAmmo` – fallback when no pickup is available: waits 2 s and runs the query again.*
 
 ### EQS – `EQS_FindAmmoPickup`
 
-Actors Of Class (`BP_AmmoPickup`, radius 5000 around the querier) → **Pickup Available** (custom C++ test) → **PathExist** (discard unreachable) → **Distance** (prefer closer):
-
 ![EQS query](screenshots/03-eqs-query-01.png)
+*Generator: Actors Of Class `BP_AmmoPickup` within 5000 units of the querier, followed by three tests.*
 
-| Pickup Available | Path Exists | Distance |
-|---|---|---|
-| ![Pickup Available](screenshots/03-eqs-query-02-pickupavailable.png) | ![Path Exists](screenshots/03-eqs-query-03-pathexists.png) | ![Distance](screenshots/03-eqs-query-04-distance.png) |
+![Pickup Available test](screenshots/03-eqs-query-02-pickupavailable.png)
+*Test 1 – **Pickup Available** (custom C++ test): filters out pickups that were already collected.*
 
-EQS results on the level:
+![Path Exists test](screenshots/03-eqs-query-03-pathexists.png)
+*Test 2 – **PathExist**: discards pickups the enemy cannot reach on the NavMesh.*
 
-| | | |
-|---|---|---|
-| ![EQS on level 1](screenshots/03-eqs-query-onlevel-01.png) | ![EQS on level 2](screenshots/03-eqs-query-onlevel-02.png) | ![EQS on level 3](screenshots/03-eqs-query-onlevel-03.png) |
+![Distance test](screenshots/03-eqs-query-04-distance.png)
+*Test 3 – **Distance**: scores pickups, preferring the closest one.*
+
+![EQS results on the level 1](screenshots/03-eqs-query-onlevel-01.png)
+*EQS result on the level – the selected pickup is highlighted with its score.*
+
+![EQS results on the level 2](screenshots/03-eqs-query-onlevel-02.png)
+*EQS results on the level.*
+
+![EQS results on the level 3](screenshots/03-eqs-query-onlevel-03.png)
+*EQS results on the level.*
 
 ### Runtime – Rewind Debugger
 
-The StateTree track shows the enemy switching between `Armed States` and `FindAmmo.MoveToPickup`:
-
 ![Rewind Debugger](screenshots/04-debugger-statetree.png)
+*Rewind Debugger – the StateTree track shows the enemy switching between `Armed States` and `FindAmmo.MoveToPickup`.*
 
 ### `BP_ShooterNPC` setup
 
-`AmmoComponent` added to the enemy, with debug prints bound to `OnAmmoChanged` and `OnAmmoDepleted`:
-
 ![BP_ShooterNPC](screenshots/05-bpshooternpc.png)
+*`AmmoComponent` added to the enemy, with debug prints bound to `OnAmmoChanged` and `OnAmmoDepleted`.*
 
 ---
 
